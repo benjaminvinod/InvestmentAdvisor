@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Investment Advisor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>AI-Powered Investment Advisor</h1>
+
+        <!-- Live Stock Section -->
+        <section>
+            <h2>Live Stock Analysis</h2>
+            <input type="text" id="stockSymbol" placeholder="Enter stock symbol (e.g., AAPL)">
+            <button onclick="getStockData()">Get Stock Data</button>
+            <div id="stockData"></div>
+        </section>
+
+        <!-- Portfolio Section -->
+        <section>
+            <h2>Portfolio Recommendations</h2>
+            <select id="riskProfile" onchange="getPortfolioRecommendation()">
+                <option value="low">Low Risk</option>
+                <option value="moderate">Moderate Risk</option>
+                <option value="high">High Risk</option>
+            </select>
+            <div id="portfolioRecommendation"></div>
+        </section>
+
+        <!-- SHAP Plot Section -->
+        <section>
+            <h2>Model Prediction Insights</h2>
+            <button onclick="getSHAPExplanation()">Generate Plot</button>
+            <img id="shapImage" style="display:none;" alt="SHAP Explanation">
+        </section>
+    </div>
+
+    <script>
+        async function getStockData() {
+            const symbol = document.getElementById('stockSymbol').value;
+            const response = await fetch(`/stock_data/${symbol}`);
+            const data = await response.json();
+
+            if (data.error) {
+                document.getElementById('stockData').innerText = data.error;
+                return;
+            }
+
+            const formatList = arr => arr.slice(0, 10).join(", ");
+            const daily = data.daily;
+            const intraday = data.intraday;
+
+            document.getElementById('stockData').innerHTML = `
+                <h3>${data.symbol} - ${data.timestamp}</h3>
+                <h4>Daily Data</h4>
+                Open: $${formatList(daily.open)}<br>
+                High: $${formatList(daily.high)}<br>
+                Low: $${formatList(daily.low)}<br>
+                Close: $${formatList(daily.close)}<br>
+                Volume: ${formatList(daily.volume)}<br><br>
+
+                <h4>Intraday Data (5min)</h4>
+                Open: $${formatList(intraday.open)}<br>
+                High: $${formatList(intraday.high)}<br>
+                Low: $${formatList(intraday.low)}<br>
+                Close: $${formatList(intraday.close)}<br>
+                Volume: ${formatList(intraday.volume)}<br>
+            `;
+        }
+
+        async function getPortfolioRecommendation() {
+            const riskProfile = document.getElementById('riskProfile').value;
+            const response = await fetch(`/portfolio/${riskProfile}`);
+            const data = await response.json();
+
+            const container = document.getElementById('portfolioRecommendation');
+            container.innerHTML = '';
+
+            if (data.error) {
+                container.innerText = data.error;
+                return;
+            }
+
+            let html = `<h4>${data.recommendation}</h4>`;
+            if (data.allocation) {
+                html += `<ul>`;
+                for (const [asset, percent] of Object.entries(data.allocation)) {
+                    html += `<li>${asset}: ${percent}</li>`;
+                }
+                html += `</ul>`;
+            }
+            container.innerHTML = html;
+        }
+
+        async function getSHAPExplanation() {
+            const image = document.getElementById('shapImage');
+            image.src = `/explain?${new Date().getTime()}`;
+            image.style.display = "block";
+        }
+    </script>
+</body>
+</html>

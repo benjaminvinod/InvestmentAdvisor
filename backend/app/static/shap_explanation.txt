@@ -1,0 +1,9 @@
+SHAP Summary Explanation:
+The following features had the most impact on the model's predictions:
+
+- Feature 3 contributed with an average SHAP value of 0.2911.
+- Feature 2 contributed with an average SHAP value of 0.1558.
+- Feature 1 contributed with an average SHAP value of 0.0379.
+- Feature 0 contributed with an average SHAP value of 0.0137.
+
+Positive SHAP values push predictions toward class 1; negative values toward class 0.
